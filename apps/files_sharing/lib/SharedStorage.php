@@ -34,10 +34,12 @@ namespace OCA\Files_Sharing;
 
 use OC\Files\Cache\FailedCache;
 use OC\Files\Cache\NullWatcher;
+use OC\Files\Cache\Watcher;
 use OC\Files\Filesystem;
 use OC\Files\Storage\FailedStorage;
 use OC\Files\Storage\Wrapper\PermissionsMask;
 use OC\User\NoUserException;
+use OCA\Files_External\Config\ExternalMountPoint;
 use OCP\Constants;
 use OCP\Files\Cache\ICacheEntry;
 use OCP\Files\NotFoundException;
@@ -405,7 +407,11 @@ class SharedStorage extends \OC\Files\Storage\Wrapper\Jail implements ISharedSto
 		return $this->superShare->getShareOwner();
 	}
 
-	public function getWatcher($path = '', $storage = null): NullWatcher {
+	public function getWatcher($path = '', $storage = null): Watcher {
+		// If the share is originating from an external storage
+		if ($this->getShare()->getNode()->getMountPoint() instanceof ExternalMountPoint) {
+			return parent::getWatcher($path, $storage);
+		}
 		// cache updating is handled by the share source
 		return new NullWatcher();
 	}
